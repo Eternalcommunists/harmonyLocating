@@ -1,41 +1,84 @@
 import { MapComponent, mapCommon, map } from '@kit.MapKit';
-import { AsyncCallback } from '@kit.BasicServicesKit';
+import http from '@ohos.net.http';
+
+// 1. 定义丢失物品的类型
+interface LostItem {
+  latitude: number;
+  longitude: number;
+  name: string;
+  description: string;
+  image: string;
+}
+
 @Entry
 @Component
-struct Index{
-  private mapOption?: mapCommon.MapOptions; //地图配置
-  private callback?: AsyncCallback<map.MapComponentController>; //初始化完成回调
-  private mapController?: map.MapComponentController; //地图控制器
+struct LostItemMap {
+  private mapOption?: mapCommon.MapOptions;
+  private mapController?: map.MapComponentController;
+  private lostItems: LostItem[] = []; // 2. 使用明确的类型
+  private selectedItem?: LostItem;  // 选中的物品
 
   aboutToAppear(): void {
-    // 地图初始化参数，设置地图中心点坐标及层级
     this.mapOption = {
-      position: {
-        target: {
-          latitude: 39.9, //纬度
-          longitude: 116.4  //经度
-        },
-        zoom: 10, //缩放层级
-        //compassControlsEnabled:true,//是否显示指南针
-        //zoomControlsEnabled:true,//是否展示缩放按钮
-        //myLocationControlsEnabled:fasle,//是否展示我的位置按钮
-        //scaleControlsEnabled:false,//是否展示比例尺
-      }
+      position: { target: { latitude: 39.9, longitude: 116.4 }, zoom: 10 }
     };
+    this.fetchLostItems();
+  }
 
-    // 地图初始化的回调
-    this.callback = async (err, mapController) => {
-      if (!err) {
-        // 获取地图的控制器类，用来操作地图
-        this.mapController = mapController;
+  fetchLostItems(): void {
+    let httpRequest = http.createHttp();
+    httpRequest.request(
+      'https://api.example.com/lost-items',
+      {
+        method: http.RequestMethod.GET,
+        header: { 'Content-Type': 'application/json' }
+      },
+      (err: Error | null, data: http.HttpResponse): void => { // 3. 明确类型
+        if (err) {
+          console.error('数据请求失败:', err.message);
+          return;
+        }
+        try {
+          let response: { items: LostItem[] } = JSON.parse(data.result); // 解析 JSON
+          this.lostItems = response.items;
+        } catch (parseError) {
+          console.error('解析数据失败:', (parseError as Error).message);
+        }
       }
-    };
+    );
   }
 
   build() {
     Stack() {
-      // 调用MapComponent组件初始化地图
-      MapComponent({ mapOptions: this.mapOption, mapCallback: this.callback }).width('100%').height('100%');
-    }.height('100%')
+      MapComponent({ mapOptions: this.mapOption, mapCallback: (err: Error | null, controller?: map.MapComponentController) => {
+        if (!err && controller) this.mapController = controller;
+      }})
+        .width('100%')
+        .height('100%');
+
+      ForEach(this.lostItems, (item: LostItem) => {
+        map.Marker({
+          position: { latitude: item.latitude, longitude: item.longitude },
+          icon: { uri: 'path/to/green-dot.png', width: 30, height: 30 }
+        }).onClick(() => {
+          this.selectedItem = item;
+        });
+      });
+
+      If(this.selectedItem, () => {
+        Column()
+          .padding(20)
+          .backgroundColor(Color.White)
+          .borderRadius(10)
+          .position({ align: Alignment.Bottom })
+          .width('80%')
+          .height(200)
+          .create(() => {
+            Text(this.selectedItem?.name).fontSize(18).fontWeight(FontWeight.Bold);
+            Text(this.selectedItem?.description).fontSize(14).margin({ top: 5 });
+            Image(this.selectedItem?.image).width('100%').height(100).margin({ top: 10 });
+          });
+      });
+    }.height('100%');
   }
 }

@@ -1,5 +1,9 @@
 {
   "src": [
-    "pages/Index"
+    "pages/Index",
+    "pages/NewApp_one",
+    "pages/WangjiMima",
+    "pages/zhuce"
+
   ]
 }

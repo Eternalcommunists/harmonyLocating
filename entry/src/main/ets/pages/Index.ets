@@ -1,5 +1,7 @@
 import axios, { AxiosResponse } from '@ohos/axios';
 import router from '@ohos.router';
+//@HMRouter({pageUrl: 'Index'})
+//import deveco.db as db;
 interface FindResponse {
   success: boolean; // 请求是否成功
   message: string;  // 响应消息
@@ -47,19 +49,18 @@ struct Index {
       })
         .margin({bottom:'10vp'}).fontColor(Color.Black)
       Row() {
-        Text("短信验证码登录")
+        Button("短信验证码登录").backgroundColor(Color.White)
           .fontColor(Color.Black)
           .fontSize(14)
           .margin({
             left:'5vp'
           })
-        Text("忘记密码").fontColor(Color.Black).fontSize(14).onClick( () => {
-          {
-            router.pushUrl({
-              url: 'pages/WangjiMima',
-            })
-          }
-        })
+        Button('忘记密码').backgroundColor(Color.White)
+          .fontColor(Color.Black)
+          .fontSize(14)
+          .onClick(() => {
+            router.pushUrl({url:'pages/WangjiMima'})
+          })
         }
       .padding({
         top:'10vp',
@@ -91,11 +92,9 @@ struct Index {
         }
       });
       //Button("登录").width("100%").type(ButtonType.Capsule);
-      Text("注册账号").fontColor(Color.Blue).fontSize(14).onClick( () => {
+      Button("注册账号").backgroundColor(Color.White).fontColor(Color.Blue).fontSize(14).onClick( () => {
         {
-          router.pushUrl({
-            url: 'pages/zhuce',
-          })
+          router.pushUrl({url: 'pages/zhuce'})
         }
       })
         LoadingProgress().width(50).height(50).color(Color.Blue)
